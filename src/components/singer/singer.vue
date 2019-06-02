@@ -1,6 +1,6 @@
 <template>
   <div class="m-singer">
-
+    我是singer
   </div>
 </template>
 <script>

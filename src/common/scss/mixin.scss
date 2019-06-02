@@ -11,6 +11,12 @@
   overflow: hidden;
   white-space: nowrap
 }
+// flex
+@mixin flex-around(){
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
 // 扩展点击区域
 @mixin extend-click(){
   position: relative;
