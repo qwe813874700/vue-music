@@ -10,7 +10,16 @@ module.exports = {
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {},
+    proxyTable: {
+      '/cgi-bin/musicu.fcg': {
+        target: "https://u.y.qq.com",
+        secure: false,
+        changeOrigin: true,
+        // pathRewrite: {
+        //   '^/cgi-bin/musicu.fcg' : ''
+        // }
+      }
+    },
 
     // Various Dev Server settings
     host: 'localhost', // can be overwritten by process.env.HOST
