@@ -1,10 +1,14 @@
 <template>
-  <scroll class="listview" :data="data" ref="listview" :listenScroll="listenScroll" :probeType="3" @scrolls="scroll">
+  <scroll class="listview" :data="data" ref="listview" :listenScroll="listenScroll" :probeType="3" @scroll="scroll">
     <ul class="listview-content">
       <li class="list-content" v-for="item in data" :key="item.title" ref="listGroup">
         <h2 class="listview-title">{{ item.title }}</h2>
         <ul  class="list">
-          <li v-for="(group, index) in item.items" :key="index" class="list-group-item">
+          <li
+            v-for="(group, index) in item.items"
+            :key="index" class="list-group-item"
+            @click="selectSinger(group)"
+          >
             <img v-lazy="group.avatar" alt="">
             <span class="name">{{ group.name }}</span>
           </li>
@@ -115,6 +119,9 @@ export default {
     }
   },
   methods: {
+    selectSinger (item) {
+      this.$emit('select-singer', item)
+    },
     touchToGroup (e) {
       let index = getData(e.target, 'index') // 获取当前点击的data-index
       this.touches.y1 = e.touches[0].pageY

@@ -1,12 +1,16 @@
 <template>
   <div class="m-singer">
-    <list-view :data="singerList"></list-view>
+    <list-view :data="singerList" @select-singer="selectSinger"></list-view>
+    <transition name="slide-fade">
+      <router-view></router-view>
+    </transition>
   </div>
 </template>
 <script>
 
 import { getSingerList } from 'api/singer'
 import ListView from '@/base/listview/listview'
+import { mapMutations } from 'vuex'
 const HOT_NAME = '热门'
 
 const HOT_LEN = 10
@@ -76,7 +80,16 @@ export default {
         return a.title.charCodeAt() - b.title.charCodeAt()
       })
       return hot.concat(ret)
-    }
+    },
+    selectSinger (item) {
+      this.$router.push({
+        path: `/singer/${item.id}`
+      })
+      this.setSinger(item)
+    },
+    ...mapMutations({
+      setSinger: 'SET_SINGER'
+    })
   },
   components: {
     ListView
@@ -86,5 +99,14 @@ export default {
 </script>
 
 <style lang="scss" scope>
-
+.slide-fade-enter-active, .slide-fade-leave-active {
+  transition: all .5s ease;
+}
+.slide-fade-leave-active {
+  transform: translate3d(-100%, 0, 0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active for below version 2.1.8 */ {
+  transform: translate3d(100%, 0,0);
+}
 </style>
