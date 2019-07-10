@@ -20,7 +20,7 @@ export function createSong (musicData) {
     album: musicData.albumname,
     duration: musicData.interval,
     image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${musicData.albummid}.jpg?max_age=2592000`,
-    url: `http://111.12.67.20/amobile.music.tc.qq.com/${musicData.songmid}.m4a?guid=6418078251&vkey=BF2D892B60031891167CD800FFCE2C8D6CC4043263E898579C1C8DD02665FB48449BB8A68059067EEDEC26D0AC4E553B45A0182C82AC1B53&uin=0&fromtag=66`
+    url: `http://ws.stream.qqmusic.qq.com/C400${musicData.songmid}.m4a?fromtag=38&guid=6170746550&uin=0&vkey=221AEB29D17BB102F49FB8331B9E8FF2F82DFB155429555FB794CCA31A328DF4B23A0FDAF346512F052590AD76FD3C648331FBD9B546D512`
   })
 }
 

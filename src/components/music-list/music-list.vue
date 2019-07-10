@@ -22,7 +22,7 @@
       :probeType="3"
     >
       <div class="item-wapper">
-        <song-list :songs="songs" ></song-list>
+        <song-list :songs="songs" @select-song="selectSong"></song-list>
       </div>
       <div class="loading-content" v-if="!songs.length">
         <loading :data="songs"></loading>
@@ -35,6 +35,7 @@
 import Scroll from '../../base/scroll/scroll'
 import SongList from '../../base/song-list/song-list'
 import Loading from '../../base/loading/loading'
+import { mapActions } from 'vuex'
 
 const HEADER_HEIGHT = 44
 
@@ -106,7 +107,16 @@ export default {
     },
     scroll (pos) {
       this.scrollY = pos.y
-    }
+    },
+    selectSong (item, index) {
+      this.selectPlaySong({
+        list: this.songs,
+        index: index
+      })
+    },
+    ...mapActions([
+      'selectPlaySong'
+    ])
   }
 }
 </script>

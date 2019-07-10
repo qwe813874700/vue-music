@@ -1,7 +1,7 @@
 <template>
   <div class="song-list">
     <ul class="song-wapper">
-      <li class="song-item" v-for="(item, index) in songs" :key="index">
+      <li class="song-item" @click="selectSongs(item, index)" v-for="(item, index) in songs" :key="index">
         <div class="song-content">
           <h2 class="name">{{ item.name }}</h2>
           <p class="desc">{{ _getAlbumAndSinger(item.singer, item.album) }}</p>
@@ -30,6 +30,9 @@ export default {
   methods: {
     _getAlbumAndSinger (album, singer) {
       return `${singer} - ${album}`
+    },
+    selectSongs (item, index) {
+      this.$emit('select-song', item, index)
     }
   }
 }

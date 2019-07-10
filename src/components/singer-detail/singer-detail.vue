@@ -39,7 +39,6 @@ export default {
       getSingerDetail(singerId).then(res => {
         if (res.code === 0) {
           this.songList = this._normalSongData(res.data.list)
-          console.log(this.songList)
         }
       })
     },

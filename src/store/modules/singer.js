@@ -1,3 +1,5 @@
+import * as types from '../mutations-type'
+
 const singer = {
   state: {
     singer: {}
@@ -6,7 +8,7 @@ const singer = {
     singer: state => state.singer
   },
   mutations: {
-    SET_SINGER: (state, data) => {
+    [types.SET_SINGER]: (state, data) => {
       state.singer = data
     }
   },
