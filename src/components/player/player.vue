@@ -42,8 +42,8 @@
             <div class="time time_r">{{ format(currentSong.duration) }}</div>
           </div>
           <div class="btn-wapper">
-            <div class="icon icon-left">
-              <i class="icon-sequence"></i>
+            <div class="icon icon-left" @click="changePlayMode">
+              <i :class="modeIcon"></i>
             </div>
             <div class="icon icon-left">
               <i class="icon-prev" @click="prev"></i>
@@ -65,7 +65,7 @@
       <div class="mini-player" v-show="!fullScreen">
         <div class="mini-left">
           <div class="icon">
-            <div class="img-wapper" @click="getNomarl" :class="cdRotate">
+            <div class="img-wapper play" @click="getNomarl" :class="cdRotate">
               <img :src="currentSong.image" alt="">
             </div>
           </div>
@@ -90,6 +90,7 @@
       @canplay="ready"
       @error="error"
       @timeupdate="updateTime"
+      @ended="endPlayMusic"
     ></audio>
   </div>
 </template>
@@ -99,12 +100,17 @@
 import { mapGetters, mapMutations } from 'vuex'
 import animations from 'create-keyframe-animation'
 import progressBar from '@/base/progress-bar/progress-bar'
+import { playMode } from '@/api/config'
+import { shuffle } from 'common/js/util'
+import Lyric from 'lyric-parser'
+
 export default {
   name: 'player',
   data () {
     return {
       songReady: false,
-      currentTime: 0
+      currentTime: 0,
+      currentLyric: null
     }
   },
   components: {
@@ -114,6 +120,9 @@ export default {
     cdRotate () {
       return this.playing ? '' : 'pause'
     },
+    modeIcon () {
+      return this.mode === playMode.loop ? 'icon-loop' : this.mode === playMode.random ? 'icon-random' : 'icon-sequence'
+    },
     playIcon () {
       return this.playing ? 'icon-pause' : 'icon-play'
     },
@@ -122,7 +131,9 @@ export default {
       'playList',
       'currentSong',
       'playing',
-      'currentIndex'
+      'currentIndex',
+      'mode',
+      'sequeceList'
     ])
   },
   methods: {
@@ -234,16 +245,57 @@ export default {
     jumpTimeByClick (time) {
       this.$refs.audio.currentTime = time
     },
+    changePlayMode () {
+      const mode = (this.mode + 1) % 3
+      this.SET_MODE(mode)
+      let list = null
+      if (mode === playMode.random) {
+        list = shuffle(this.sequeceList)
+      } else {
+        list = this.sequeceList
+      }
+      this.resetIndex(list)
+      this.SET_PLAY_LIST(list)
+    },
+    resetIndex (list) {
+      let index = list.findIndex(item => {
+        return item.id === this.currentSong.id
+      })
+      this.SET_CURRENT_INDEX(index)
+    },
     ...mapMutations([
       'SET_FULL_SCREEN',
       'SET_PLAYING',
-      'SET_CURRENT_INDEX'
-    ])
+      'SET_CURRENT_INDEX',
+      'SET_MODE',
+      'SET_PLAY_LIST'
+    ]),
+    endPlayMusic () {
+      if (this.mode === playMode.loop) {
+        this.loop()
+      } else {
+        this.next()
+      }
+    },
+    loop () {
+      this.$refs.audio.currentTime = 0
+      this.$refs.audio.play()
+    },
+    getLyric () {
+      this.currentSong.getLyric().then(res => {
+        this.currentLyric = new Lyric(res)
+        console.log(this.currentLyric)
+      })
+    }
   },
   watch: {
-    currentSong (newVal) {
+    currentSong (newVal, oldVal) {
+      if (oldVal && newVal.id === oldVal.id) {
+        return
+      }
       this.$nextTick(() => {
         this.$refs.audio.play()
+        this.getLyric()
       })
     },
     playing (newVal) {
@@ -468,6 +520,12 @@ export default {
         .img-wapper{
           width:100%;
           height:100%;
+          &.play{
+            animation: rotate 20s linear infinite;
+          }
+          &.pause{
+            animation-play-state: paused;
+          }
           img{
             width:100%;
             height:100%;

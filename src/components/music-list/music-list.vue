@@ -6,7 +6,7 @@
       </div>
       <div class="music-title" v-html="singer.name"></div>
     </div>
-    <div class="bg-image" :style="bgStyle" ref="bgImg">
+    <div class="bg-image" :style="bgStyle" ref="bgImg" @click="random">
       <div class="muisc-play" v-show="songs.length" ref="playBtn">
         <i class="icon-play"></i>
         <span class="play-text">随机播放全部</span>
@@ -114,8 +114,14 @@ export default {
         index: index
       })
     },
+    random () {
+      this.randomPlaySong({
+        list: this.songs
+      })
+    },
     ...mapActions([
-      'selectPlaySong'
+      'selectPlaySong',
+      'randomPlaySong'
     ])
   }
 }

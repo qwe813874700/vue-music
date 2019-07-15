@@ -11,3 +11,9 @@ export const options = {
 }
 
 export const ERR_OK = 0
+
+export const playMode = {
+  loop: 0,
+  random: 1,
+  sequence: 2
+}
