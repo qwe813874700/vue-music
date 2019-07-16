@@ -18,8 +18,12 @@
           <h1 class="title">{{ currentSong.name }}</h1>
           <h2 class="subtitle">{{ currentSong.singer }}</h2>
         </div>
-        <div class="middle">
-          <div class="middle_left">
+        <div class="middle"
+          @touchstart.prevent="middleTouchStart"
+          @touchmove.prevent="middleTouchMove"
+          @touchend="middleTouchEnd"
+        >
+          <div class="middle_left" ref="middleLeft">
             <div class="cd-wapper" v-if="currentSong.image" ref="cd-wapper">
               <div class="cd play" :class="cdRotate">
                 <img :src="currentSong.image" class="image" alt="">
@@ -27,12 +31,21 @@
             </div>
             <div class="cd-lyric">明明很爱你</div>
           </div>
-          <div class="middle_right"></div>
+          <scroll class="middle_right" v-if="currentLyric" :data="currentLyric.lines" ref="lyricWapper">
+            <div class="lyric-wapper">
+              <p
+                v-for="(item, index) in currentLyric.lines"
+                :key="item.time"
+                :class="{'active': currentLineNum == index}"
+                ref="lyricText"
+              >{{ item.txt }}</p>
+            </div>
+          </scroll>
         </div>
         <div class="bottom">
           <div class="index-wapper">
-            <span class="index"></span>
-            <span class="index"></span>
+            <span class="index" :class="{'active': currentShow === 'cd'}"></span>
+            <span class="index" :class="{'active': currentShow !== 'cd'}"></span>
           </div>
           <div class="progress-wapper">
             <div class="time time_l">{{ format(currentTime) }}</div>
@@ -103,6 +116,7 @@ import progressBar from '@/base/progress-bar/progress-bar'
 import { playMode } from '@/api/config'
 import { shuffle } from 'common/js/util'
 import Lyric from 'lyric-parser'
+import Scroll from '@/base/scroll/scroll'
 
 export default {
   name: 'player',
@@ -110,11 +124,18 @@ export default {
     return {
       songReady: false,
       currentTime: 0,
-      currentLyric: null
+      currentLyric: null,
+      currentLineNum: 0,
+      currentShow: 'cd',
+      touch: {
+        pageX: 0,
+        pageY: 0
+      }
     }
   },
   components: {
-    progressBar
+    progressBar,
+    Scroll
   },
   computed: {
     cdRotate () {
@@ -283,9 +304,69 @@ export default {
     },
     getLyric () {
       this.currentSong.getLyric().then(res => {
-        this.currentLyric = new Lyric(res)
+        this.currentLyric = new Lyric(res, this.lyricHandle)
+        if (this.playing) {
+          this.currentLyric.play()
+        }
         console.log(this.currentLyric)
       })
+    },
+    lyricHandle ({lineNum, text}) {
+      this.currentLineNum = lineNum
+      if (lineNum > 5) {
+        let lyricText = this.$refs.lyricText[this.currentLineNum - 5]
+        this.$refs.lyricWapper.scrollToElement(lyricText, 1000)
+      } else {
+        let lyricText = this.$refs.lyricText[0]
+        this.$refs.lyricWapper.scrollToElement(lyricText, 1000)
+      }
+    },
+    middleTouchStart (e) {
+      const touch = e.touches[0]
+      this.isMiddleStart = true
+      this.touch.pageX = touch.pageX
+      this.touch.pageY = touch.pageY
+    },
+    middleTouchMove (e) {
+      console.log(this.isMiddleStart)
+      if (!this.isMiddleStart) {
+        return
+      }
+      const touch = e.touches[0]
+      const detailX = touch.pageX - this.touch.pageX
+      const detailY = touch.pageY - this.touch.pageY
+      if (Math.abs(detailX) < Math.abs(detailY)) {
+        return
+      }
+      this.touch.percen = Math.abs(detailX / window.innerWidth)
+      console.log(this.touch.percen)
+      const left = this.currentShow === 'cd' ? 0 : -window.innerWidth
+      const offsetWidth = Math.min(0, Math.max(-window.innerWidth, left + detailX))
+      this.$refs.lyricWapper.$el.style.transform = `translate3d(${offsetWidth}px, 0, 0)`
+      this.$refs.middleLeft.style.opacity = 1 - this.touch.percen
+      this.$refs.middleLeft.style.transition = 'all .3s'
+    },
+    middleTouchEnd (e) {
+      let offsetWidth = 0
+      if (this.currentShow === 'cd') {
+        if (this.touch.percen > 0.1) {
+          offsetWidth = -window.innerWidth
+          this.currentShow = 'lyric'
+          this.$refs.middleLeft.style.opacity = 0
+        } else {
+          offsetWidth = 0
+        }
+      } else {
+        if (this.touch.percen < 0.9) {
+          offsetWidth = 0
+          this.currentShow = 'cd'
+          this.$refs.middleLeft.style.opacity = 1
+        } else {
+          offsetWidth = window.innerWidth
+        }
+      }
+      this.$refs.lyricWapper.$el.style.transition = 'all .3s'
+      this.$refs.lyricWapper.$el.style.transform = `translate3d(${offsetWidth}px, 0, 0)`
     }
   },
   watch: {
@@ -374,6 +455,7 @@ export default {
       bottom: 170px;
       white-space: nowrap;
       font-size: 0;
+      text-align: center;
       .middle_left{
         display: inline-block;
         vertical-align: top;
@@ -419,6 +501,27 @@ export default {
           margin-top:30px;
         }
       }
+      .middle_right{
+        display: inline-block;
+        vertical-align: top;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        .lyric-wapper{
+          width: 80%;
+          margin: 0 auto;
+          overflow: hidden;
+          text-align: center;
+        }
+        p {
+          line-height: 32px;
+          color: hsla(0,0%,100%,.5);
+          font-size: 14px;
+          &.active{
+            color: #fff;
+          }
+        }
+      }
     }
     .bottom{
       position: absolute;
@@ -435,6 +538,11 @@ export default {
           height: 8px;
           border-radius: 50%;
           background: hsla(0,0%,100%,.5);
+          &.active{
+            background: #fff;
+            width:20px;
+            border:10px;
+          }
         }
         .index.active{
           width: 20px;
