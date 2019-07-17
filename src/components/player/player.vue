@@ -29,7 +29,7 @@
                 <img :src="currentSong.image" class="image" alt="">
               </div>
             </div>
-            <div class="cd-lyric">明明很爱你</div>
+            <div class="cd-lyric">{{ currentShowLric }}</div>
           </div>
           <scroll class="middle_right" v-if="currentLyric" :data="currentLyric.lines" ref="lyricWapper">
             <div class="lyric-wapper">
@@ -127,9 +127,12 @@ export default {
       currentLyric: null,
       currentLineNum: 0,
       currentShow: 'cd',
+      currentShowLric: '',
       touch: {
         pageX: 0,
-        pageY: 0
+        pageY: 0,
+        detailX: 0,
+        detailY: 0
       }
     }
   },
@@ -232,7 +235,9 @@ export default {
       this.SET_FULL_SCREEN(true)
     },
     playSong () {
-      this.SET_PLAYING(!this.playing)
+      const playing = !this.playing
+      this.SET_PLAYING(playing)
+      playing ? this.currentLyric.play() : this.currentLyric.stop()
     },
     next () {
       if (!this.songReady) {
@@ -264,7 +269,11 @@ export default {
       }
     },
     jumpTimeByClick (time) {
-      this.$refs.audio.currentTime = time
+      const currentTime = time
+      this.$refs.audio.currentTime = currentTime
+      if (this.currentLyric) {
+        this.currentLyric.seek(currentTime * 1000)
+      }
     },
     changePlayMode () {
       const mode = (this.mode + 1) % 3
@@ -301,6 +310,9 @@ export default {
     loop () {
       this.$refs.audio.currentTime = 0
       this.$refs.audio.play()
+      if (this.currentLyric) {
+        this.currentLyric.seek(0)
+      }
     },
     getLyric () {
       this.currentSong.getLyric().then(res => {
@@ -308,10 +320,10 @@ export default {
         if (this.playing) {
           this.currentLyric.play()
         }
-        console.log(this.currentLyric)
       })
     },
     lyricHandle ({lineNum, text}) {
+      this.currentShowLric = this.currentLyric.lines[lineNum].txt
       this.currentLineNum = lineNum
       if (lineNum > 5) {
         let lyricText = this.$refs.lyricText[this.currentLineNum - 5]
@@ -328,27 +340,35 @@ export default {
       this.touch.pageY = touch.pageY
     },
     middleTouchMove (e) {
-      console.log(this.isMiddleStart)
       if (!this.isMiddleStart) {
         return
       }
       const touch = e.touches[0]
-      const detailX = touch.pageX - this.touch.pageX
-      const detailY = touch.pageY - this.touch.pageY
-      if (Math.abs(detailX) < Math.abs(detailY)) {
+      this.touch.detailX = touch.pageX - this.touch.pageX
+      this.touch.detailY = touch.pageY - this.touch.pageY
+      this.isMove = Math.abs(this.touch.detailX) > Math.abs(this.touch.detailY)
+      if (!this.isMove) {
         return
       }
-      this.touch.percen = Math.abs(detailX / window.innerWidth)
-      console.log(this.touch.percen)
+      if ((this.currentShow === 'cd' && this.touch.detailX > 0) || (this.currentShow !== 'cd' && this.touch.detailX < 0)) {
+        return
+      }
+      this.touch.percen = Math.abs(this.touch.detailX / window.innerWidth)
       const left = this.currentShow === 'cd' ? 0 : -window.innerWidth
-      const offsetWidth = Math.min(0, Math.max(-window.innerWidth, left + detailX))
+      const offsetWidth = Math.min(0, Math.max(-window.innerWidth, left + this.touch.detailX))
       this.$refs.lyricWapper.$el.style.transform = `translate3d(${offsetWidth}px, 0, 0)`
       this.$refs.middleLeft.style.opacity = 1 - this.touch.percen
       this.$refs.middleLeft.style.transition = 'all .3s'
     },
     middleTouchEnd (e) {
       let offsetWidth = 0
+      if (!this.isMove) {
+        return
+      }
       if (this.currentShow === 'cd') {
+        if (this.touch.detailX > 0) {
+          return
+        }
         if (this.touch.percen > 0.1) {
           offsetWidth = -window.innerWidth
           this.currentShow = 'lyric'
@@ -357,6 +377,9 @@ export default {
           offsetWidth = 0
         }
       } else {
+        if (this.touch.detailX < 0) {
+          return
+        }
         if (this.touch.percen < 0.9) {
           offsetWidth = 0
           this.currentShow = 'cd'
@@ -373,6 +396,9 @@ export default {
     currentSong (newVal, oldVal) {
       if (oldVal && newVal.id === oldVal.id) {
         return
+      }
+      if (this.currentLyric) {
+        this.currentLyric.stop()
       }
       this.$nextTick(() => {
         this.$refs.audio.play()
