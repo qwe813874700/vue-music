@@ -7,8 +7,9 @@
 <script>
 import { mapGetters } from 'vuex'
 import { getSingerDetail } from 'api/singer'
-import { createSong } from 'common/js/song'
+import { createSong, isValidMusic, processSongsUrl } from '@/common/js/song'
 import MusicList from '../music-list/music-list'
+import { ERR_OK } from 'api/config'
 
 export default {
   name: 'SingerDetail',
@@ -37,16 +38,18 @@ export default {
         return
       }
       getSingerDetail(singerId).then(res => {
-        if (res.code === 0) {
-          this.songList = this._normalSongData(res.data.list)
+        if (res.code === ERR_OK) {
+          processSongsUrl(this._normalizeSongs(res.data.list)).then((songs) => {
+            this.songList = songs
+          })
         }
       })
     },
-    _normalSongData (list) {
+    _normalizeSongs (list) {
       let ret = []
-      list.forEach(item => {
-        let {musicData} = item
-        if (musicData.songid && musicData.albummid) {
+      list.forEach((item) => {
+        let { musicData } = item
+        if (isValidMusic(musicData)) {
           ret.push(createSong(musicData))
         }
       })
