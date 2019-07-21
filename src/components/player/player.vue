@@ -237,7 +237,7 @@ export default {
     playSong () {
       const playing = !this.playing
       this.SET_PLAYING(playing)
-      playing ? this.currentLyric.play() : this.currentLyric.stop()
+      this.currentLyric.togglePlay()
     },
     next () {
       if (!this.songReady) {

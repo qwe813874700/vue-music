@@ -47,12 +47,14 @@
 import Scroll from '../scroll/scroll'
 import { getData } from '../../common/js/dom'
 import Loading from '../loading/loading'
+import { playListMixin } from '@/common/js/mixin'
 
 const INDEX_HEIGHT = 18
 const TITLE_HEIGHT = 40
 
 export default {
   name: 'listview',
+  mixins: [playListMixin],
   created () {
     this.touches = {}
     this.listHeight = []
@@ -119,6 +121,11 @@ export default {
     }
   },
   methods: {
+    handlePlaylist (playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
+      this.$refs.listview.$el.style.bottom = bottom
+      this.$refs.listview.refresh()
+    },
     selectSinger (item) {
       this.$emit('select-singer', item)
     },

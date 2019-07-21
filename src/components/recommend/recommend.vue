@@ -43,9 +43,11 @@ import { getRecommend, getDiscList } from 'api/recommend.js'
 import Slider from '../../base/slider/slider'
 import Scroll from '../../base/scroll/scroll'
 import Loading from '../../base/loading/loading'
+import { playListMixin } from '@/common/js/mixin'
 
 export default {
   name: 'Recommend',
+  mixins: [playListMixin],
   data () {
     return {
       bannerList: [],
@@ -64,6 +66,11 @@ export default {
     }, 2000)
   },
   methods: {
+    handlePlaylist (playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
+      this.$refs.scroll.$el.style.bottom = bottom
+      this.$refs.scroll.refresh()
+    },
     getRecommendList () {
       getRecommend().then((res) => {
         if (res.code === 0) {

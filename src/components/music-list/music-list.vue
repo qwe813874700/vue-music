@@ -36,10 +36,12 @@ import Scroll from '../../base/scroll/scroll'
 import SongList from '../../base/song-list/song-list'
 import Loading from '../../base/loading/loading'
 import { mapActions } from 'vuex'
+import { playListMixin } from '@/common/js/mixin'
 
 const HEADER_HEIGHT = 44
 
 export default {
+  mixins: [playListMixin],
   props: {
     singer: {
       type: Object,
@@ -97,6 +99,11 @@ export default {
     }
   },
   methods: {
+    handlePlaylist (playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
+      this.$refs.songwapper.$el.style.bottom = bottom
+      this.$refs.songwapper.refresh()
+    },
     _initSongWapperTop () {
       this.imageHeight = this.$refs.bgImg.clientHeight
       this.minTransalteY = -this.imageHeight + HEADER_HEIGHT
@@ -122,7 +129,10 @@ export default {
     ...mapActions([
       'selectPlaySong',
       'randomPlaySong'
-    ])
+    ]),
+    refresh () {
+      this.$refs.songwapper.refresh()
+    }
   }
 }
 </script>
