@@ -1,6 +1,6 @@
 <template>
   <div class="singer-detail">
-    <music-list :singer="singer" :songs="songList"></music-list>
+    <music-list :songs="songList" :title="singer.name" :bg-image="singer.avatar"></music-list>
   </div>
 </template>
 
@@ -28,6 +28,7 @@ export default {
   },
   created () {
     this._getSongListBySinger(this.singer.id)
+    console.log(this.singer)
   },
   mounted () {
   },

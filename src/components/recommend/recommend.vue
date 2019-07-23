@@ -17,7 +17,7 @@
             <p class="title">热门歌单推荐</p>
           </div>
           <ul v-show="discList.length">
-            <li v-for="item in discList" :key="item.dissid" @click="getSongsByDissid(item.dissid)">
+            <li v-for="item in discList" :key="item.dissid" @click="getSongsByDissid(item)">
               <div class="recommend-box">
                 <div class="recommend-img">
                   <img  v-lazy="item.imgurl"  width="60" height="60" alt="">
@@ -35,19 +35,19 @@
         <loading></loading>
       </div>
     </scroll>
-    <music-list :songs="songList"  :singer="dissObj" v-if="songList.length > 0"></music-list>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import { getRecommend, getDiscList, getSongList } from 'api/recommend.js'
+import { getRecommend, getDiscList } from 'api/recommend.js'
 import Slider from '../../base/slider/slider'
 import Scroll from '../../base/scroll/scroll'
 import Loading from '../../base/loading/loading'
 import { playListMixin } from '@/common/js/mixin'
 import { ERR_OK } from '@/api/config'
 import MusicList from '@/components/music-list/music-list'
-import { createSong, isValidMusic, processSongsUrl } from '@/common/js/song'
+import { mapMutations } from 'vuex'
 
 export default {
   name: 'Recommend',
@@ -92,26 +92,15 @@ export default {
         }
       })
     },
-    getSongsByDissid (dissid) {
-      getSongList(dissid).then(res => {
-        if (res.code === ERR_OK) {
-          processSongsUrl(this._normalizeSongs(res.cdlist[0].songlist)).then((songs) => {
-            this.songList = songs
-          })
-        }
+    getSongsByDissid (disc) {
+      this.$router.push({
+        path: `/recommend/${disc.dissid}`
       })
+      this.SET_DISC(disc)
     },
-    _normalizeSongs (list) {
-      let ret = []
-      list.forEach((item) => {
-        let musicData = item
-        console.log(musicData.songid)
-        if (isValidMusic(musicData)) {
-          ret.push(createSong(musicData))
-        }
-      })
-      return ret
-    },
+    ...mapMutations([
+      'SET_DISC'
+    ]),
     loadImage () {
       if (this.checkLoadImage) {
         this.$refs.scroll.refresh()

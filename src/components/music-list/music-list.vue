@@ -4,7 +4,7 @@
       <div class="music-back" @click="back">
         <i class="icon-back"></i>
       </div>
-      <div class="music-title" v-html="singer.name"></div>
+      <div class="music-title" v-html="title"></div>
     </div>
     <div class="bg-image" :style="bgStyle" ref="bgImg" @click="random">
       <div class="muisc-play" v-show="songs.length" ref="playBtn">
@@ -54,12 +54,20 @@ export default {
       default: () => {
         return []
       }
+    },
+    title: {
+      type: String,
+      default: ''
+    },
+    bgImage: {
+      type: String,
+      default: ''
     }
   },
   data () {
     return {
       bgStyle: {
-        background: `url(${this.singer.avatar})`
+        background: `url(${this.bgImage})`
       },
       scrollY: 0
     }
@@ -207,6 +215,7 @@ $header-height:44px;
     left: 0;
     right: 0;
     z-index: 10;
+    background: $color-background;
     // overflow: hidden;
   }
   .loading-content{
