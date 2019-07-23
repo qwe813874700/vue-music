@@ -1,6 +1,6 @@
 <template>
   <div class="m-recommend">
-    <scroll :data="discList" class="recommend-content" ref="scroll">
+    <scroll :data="discList" class="recommend-content" ref="scroll" v-show="songList.length == 0">
       <div>
         <slider v-if="bannerList.length">
           <div
@@ -17,14 +17,14 @@
             <p class="title">热门歌单推荐</p>
           </div>
           <ul v-show="discList.length">
-            <li v-for="(item, index) in discList" :key="index">
+            <li v-for="item in discList" :key="item.dissid" @click="getSongsByDissid(item.dissid)">
               <div class="recommend-box">
                 <div class="recommend-img">
-                  <img  v-lazy="item.cover"  width="60" height="60" alt="">
+                  <img  v-lazy="item.imgurl"  width="60" height="60" alt="">
                 </div>
                 <div class="recommend-text">
-                  <p class="text-top">{{ item.title }}</p>
-                  <p class="text-bottom">播放量:{{ item.listen_num }}</p>
+                  <p class="text-top">{{ item.dissname }}</p>
+                  <p class="text-bottom">播放量:{{ item.listennum }}</p>
                 </div>
               </div>
             </li>
@@ -35,15 +35,19 @@
         <loading></loading>
       </div>
     </scroll>
+    <music-list :songs="songList"  :singer="dissObj" v-if="songList.length > 0"></music-list>
   </div>
 </template>
 
 <script>
-import { getRecommend, getDiscList } from 'api/recommend.js'
+import { getRecommend, getDiscList, getSongList } from 'api/recommend.js'
 import Slider from '../../base/slider/slider'
 import Scroll from '../../base/scroll/scroll'
 import Loading from '../../base/loading/loading'
 import { playListMixin } from '@/common/js/mixin'
+import { ERR_OK } from '@/api/config'
+import MusicList from '@/components/music-list/music-list'
+import { createSong, isValidMusic, processSongsUrl } from '@/common/js/song'
 
 export default {
   name: 'Recommend',
@@ -51,19 +55,22 @@ export default {
   data () {
     return {
       bannerList: [],
-      discList: []
+      discList: [],
+      songList: [],
+      dissObj: {}
     }
   },
   components: {
     Slider,
     Scroll,
-    Loading
+    Loading,
+    MusicList
   },
   created () {
     this.getRecommendList()
     setTimeout(() => {
       this.getDiscListByrecommend()
-    }, 2000)
+    }, 60)
   },
   methods: {
     handlePlaylist (playlist) {
@@ -73,21 +80,41 @@ export default {
     },
     getRecommendList () {
       getRecommend().then((res) => {
-        if (res.code === 0) {
+        if (res.code === ERR_OK) {
           this.bannerList = res.data.slider
         }
       })
     },
     getDiscListByrecommend () {
       getDiscList().then((res) => {
-        if (res.code === 0 && res.recomPlaylist.code === 0) {
-          this.discList = res.recomPlaylist.data.v_hot
+        if (res.code === ERR_OK) {
+          this.discList = res.data.list
         }
       })
     },
+    getSongsByDissid (dissid) {
+      getSongList(dissid).then(res => {
+        if (res.code === ERR_OK) {
+          processSongsUrl(this._normalizeSongs(res.cdlist[0].songlist)).then((songs) => {
+            this.songList = songs
+          })
+        }
+      })
+    },
+    _normalizeSongs (list) {
+      let ret = []
+      list.forEach((item) => {
+        let musicData = item
+        console.log(musicData.songid)
+        if (isValidMusic(musicData)) {
+          ret.push(createSong(musicData))
+        }
+      })
+      return ret
+    },
     loadImage () {
       if (this.checkLoadImage) {
-        this.$refs.scrol.refresh()
+        this.$refs.scroll.refresh()
       }
     }
   }
@@ -121,8 +148,6 @@ export default {
             align-items: center;
             .recommend-img{
               padding-right:20px;
-              img{
-              }
             }
             .recommend-text{
               display: flex;

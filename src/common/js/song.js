@@ -58,6 +58,7 @@ function filterSinger (singer) {
 }
 
 export function isValidMusic (musicData) {
+  console.log(musicData.songid)
   return musicData.songid && musicData.albummid && (!musicData.pay || musicData.pay.payalbumprice === 0)
 }
 
