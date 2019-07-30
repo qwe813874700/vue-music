@@ -28,7 +28,6 @@ export default {
   },
   created () {
     this._getSongListBySinger(this.singer.id)
-    console.log(this.singer)
   },
   mounted () {
   },
